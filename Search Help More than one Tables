@@ -1,0 +1,79 @@
+  DATA it_data TYPE TABLE OF char120.
+  DATA :wa_data TYPE char100,
+        date    TYPE char10.
+  REFRESH : it_map1,it_fld1,it_data,it_mat_f4.
+  CLEAR : it_map1,it_fld1,it_data,it_mat_f4.
+
+  it_map1-fldname = 'MATNR'.
+  it_map1-dyfldname = 'R_MAT'.
+  APPEND it_map1.
+  CLEAR it_map1.
+
+  it_map1-fldname = 'MAKTX'.
+  it_map1-dyfldname = 'R_MTXT'.
+  APPEND it_map1.
+  CLEAR it_map1.
+
+  it_map1-fldname = 'WERKS'.
+  it_map1-dyfldname = 'P_PLNT'.
+  APPEND it_map1.
+  CLEAR it_map1.
+
+  it_map1-fldname = 'MEINS'.
+  it_map1-dyfldname = 'P_UOM'.
+  APPEND it_map1.
+  CLEAR it_map1.
+
+  it_fld1-tabname = 'ZMM_VEND_WAR'.
+  it_fld1-fieldname = 'MATNR'.
+  APPEND it_fld1.
+  CLEAR it_fld1.
+
+  it_fld1-tabname = 'ZMM_VEND_WAR'.
+  it_fld1-fieldname = 'MAKTX'.
+  APPEND it_fld1.
+  CLEAR it_fld1.
+
+  it_fld1-tabname = 'ZMM_VEND_WAR'.
+  it_fld1-fieldname = 'WERKS'.
+  APPEND it_fld1.
+  CLEAR it_fld1.
+
+  it_fld1-tabname = 'ZMM_VEND_WAR'.
+  it_fld1-fieldname = 'MEINS'.
+  APPEND it_fld1.
+  CLEAR it_fld1.
+
+
+
+  LOOP AT it_mat INTO wa_mat.
+    READ TABLE it_matx INTO wa_matx WITH KEY matnr = wa_mat-matnr.
+    APPEND wa_mat-matnr TO it_data.
+    APPEND wa_matx-maktx TO it_data.
+    APPEND wa_mat-werks TO it_data.
+    APPEND wa_mat-meins TO it_data.
+  ENDLOOP.
+
+  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+    EXPORTING
+      retfield        = 'MATNR'
+      dynpprog        = sy-repid
+      dynpnr          = sy-dynnr
+      dynprofield     = 'R_MAT'
+      value_org       = 'C'
+    TABLES
+      value_tab       = it_data
+      field_tab       = it_fld1
+      return_tab      = it_mat_f4
+      dynpfld_mapping = it_map1
+    EXCEPTIONS
+      parameter_error = 1
+      no_values_found = 2
+      OTHERS          = 3.
+  IF sy-subrc <> 0.
+    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  ELSE.
+    READ TABLE it_mat_f4 INDEX 1.
+    r_mat  =  it_mat_f4-fieldval.
+  ENDIF.
